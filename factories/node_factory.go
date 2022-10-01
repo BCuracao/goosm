@@ -1,6 +1,9 @@
 package factories
 
-import "os"
+import (
+	"encoding/xml"
+	"os"
+)
 
 type Node struct {
 	Id  int     `xml:"id,attr"`
@@ -8,26 +11,22 @@ type Node struct {
 	Lon float32 `xml:"lon,attr"`
 }
 
-/*
-func GetNodes(docxFile *os.File) []Node {
-	decoder := xml.NewDecoder(docxFile)
+func GetNodes(xmlFile *os.File) []Node {
 	nodes := make([]Node, 0)
+	decoder := xml.NewDecoder(xmlFile)
 	for {
-		t, _ := decoder.Token()
-		if t == nil {
+		token, _ := decoder.Token()
+		if token == nil {
 			break
 		}
-		switch se := t.(type) {
+		switch tokenType := token.(type) {
 		case xml.StartElement:
-			if se.Name.Local == "node" {
+			if tokenType.Name.Local == "node" {
 				var node Node
-				decoder.DecodeElement(&node, &se)
+				decoder.DecodeElement(&node, &tokenType)
 				nodes = append(nodes, node)
 			}
 		}
 	}
 	return nodes
 }
-*/
-
-func GetNodes(docxFile *os.File)
