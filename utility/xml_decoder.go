@@ -18,14 +18,14 @@ type Way struct {
 }
 
 type Nd struct {
-	Ref int `xml:"ref,attr"`
+	Ref float64 `xml:"ref,attr"`
 }
 
 var Nodes = make([]Node, 0)
 var Ways = make([]Way, 0)
 var Nds = make([]Nd, 0)
 
-func decodeXml(xmlFile *os.File) {
+func DecodeXml(xmlFile *os.File) {
 	decoder := xml.NewDecoder(xmlFile)
 
 	for {
