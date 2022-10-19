@@ -6,24 +6,38 @@ import (
 )
 
 type Node struct {
-	Id  int     `xml:"id,attr"`
-	Lat float32 `xml:"lat,attr"`
-	Lon float32 `xml:"lon,attr"`
+	Id  float64 `xml:"id,attr"`
+	Lat float64 `xml:"lat,attr"`
+	Lon float64 `xml:"lon,attr"`
 }
 
 type Way struct {
-	Id  int  `xml:"id,attr"`
-	Nd  []Nd `xml:"nd"`
-	Tag byte `xml:"k,attr"`
+	Id   int   `xml:"id,attr"`
+	Nd   []Nd  `xml:"nd"`
+	Tags []Tag `xml:"tag"`
 }
 
 type Nd struct {
 	Ref float64 `xml:"ref,attr"`
+	//TODO Add the relevant nodes here
+	WayNode Node
+}
+
+type Bound struct {
+	MinLat float64 `xml:"minlat,attr"`
+	MinLon float64 `xml:"minlon,attr"`
+	MaxLat float64 `xml:"maxlat,attr"`
+	MaxLon float64 `xml:"maxlon,attr"`
+}
+
+type Tag struct {
+	K string `xml:"k,attr"`
+	V string `xml:"v,attr"`
 }
 
 var Nodes = make([]Node, 0)
 var Ways = make([]Way, 0)
-var Nds = make([]Nd, 0)
+var Bounds Bound
 
 func DecodeXml(xmlFile *os.File) {
 	decoder := xml.NewDecoder(xmlFile)
@@ -35,7 +49,11 @@ func DecodeXml(xmlFile *os.File) {
 		}
 		switch tokenType := token.(type) {
 		case xml.StartElement:
-			if tokenType.Name.Local == "node" {
+			if tokenType.Name.Local == "bounds" {
+				var bounds Bound
+				decoder.DecodeElement(&bounds, &tokenType)
+				Bounds = bounds
+			} else if tokenType.Name.Local == "node" {
 				var node Node
 				decoder.DecodeElement(&node, &tokenType)
 				Nodes = append(Nodes, node)
@@ -43,10 +61,19 @@ func DecodeXml(xmlFile *os.File) {
 				var way Way
 				decoder.DecodeElement(&way, &tokenType)
 				Ways = append(Ways, way)
-			} else if tokenType.Name.Local == "nd" {
-				var nd Nd
-				decoder.DecodeElement(&nd, &tokenType)
-				Nds = append(Nds, nd)
+			}
+		}
+	}
+	FindWayNdRefValueInNodesId()
+}
+
+func FindWayNdRefValueInNodesId() {
+	for i := 0; i < len(Ways); i++ {
+		for j := 0; j < len(Ways[i].Nd); j++ {
+			for k := 0; k < len(Nodes); k++ {
+				if Ways[i].Nd[j].Ref == Nodes[k].Id {
+					Ways[i].Nd[j].WayNode = Nodes[k]
+				}
 			}
 		}
 	}
